@@ -508,3 +508,78 @@ Questions=st.selectbox("Select the question",("1. All Videos and their Channel n
                                               "8. Videos published in the year of 2023",
                                               "9. Average Duration of all videos in each channels",
                                               "10. Videos with highest number of comments"))
+if Questions=="1. All Videos and their Channel name":
+    query1="""select title as videos,Channel_name as channelname from videos"""
+    cursor.execute(query1)
+    t1=cursor.fetchall()
+    df1=pd.DataFrame(t1,columns=["video title","channel name"])
+    st.write(df1)
+
+elif Questions=="2. Channel with most number of videos":
+    query2="""select Channel_Name as channelname,total_videos as no_videos from channels
+                    order by total_videos desc"""
+    cursor.execute(query2)
+    t2=cursor.fetchall()
+    df2=pd.DataFrame(t2,columns=["Channel name","No of videos"])
+    st.write(df2)
+
+elif Questions=="3. Top 10 most viewed Videos":
+    query3="""select views as views,channel_name as channelname,title as videotitle from videos
+                    where views is not null order by views desc limit 10"""
+    cursor.execute(query3)
+    t3=cursor.fetchall()
+    df3=pd.DataFrame(t3,columns=["views","channel name",'videotitle'])
+    st.write(df3)
+
+elif Questions=="4. Comments in each Videos":
+    query4="""select comments as no_comments,title as videotitle from videos where comments is not null """
+    cursor.execute(query4)
+    t4=cursor.fetchall()
+    df4=pd.DataFrame(t4,columns=["No of Comments","Video title"])
+    st.write(df4)
+
+elif Questions=="5. Most Liked Videos":
+    query5="""select title as videotitle,channel_name as channelname,likes as likecount
+                from videos where likes is not null order by likes desc"""
+    cursor.execute(query5)
+    t5=cursor.fetchall()
+    df5=pd.DataFrame(t5,columns=["Video title","Channel name","likecount"])
+    st.write(df5)
+
+elif Questions=="6. Likes of all Videos":
+    query6="""select likes as likecount,title as videotitle from videos"""
+    cursor.execute(query6)
+    t6=cursor.fetchall()
+    df6=pd.DataFrame(t6,columns=["likecount","Video title"])
+    st.write(df6)
+
+elif Questions=="7. Views of each Channel":
+    query7="""select channel_name as channelname,views as totalviews from channels"""
+    cursor.execute(query7)
+    t7=cursor.fetchall()
+    df7=pd.DataFrame(t7,columns=["Channel name","Total views"])
+    st.write(df7)
+
+elif Questions=="8. Videos published in the year of 2023":
+    query8="""select title as Video_title,Published_Date as videoreleased,channel_name as channelname from videos
+                where extract(year from Published_Date)=2023"""
+    cursor.execute(query8)
+    t8=cursor.fetchall()
+    df8=pd.DataFrame(t8,columns=["Video title","Published Date","Channel name"])
+    st.write(df8)
+
+elif Questions=="9. Average Duration of all videos in each channels":
+        query9="""select channel_name as channelname,avg(duration) as averageduration from videos
+                group by channel_name"""
+        cursor.execute(query9)
+        t9=cursor.fetchall()
+        df9=pd.DataFrame(t9,columns=["Channel name","Average duration"])
+        st.write(df9)
+
+elif Questions=="10. Videos with highest number of comments":
+        query10="""select title as videotitle,channel_name as channelname,comments as comments from videos
+                where comments is not null order by comments desc"""
+        cursor.execute(query10)
+        t10=cursor.fetchall()
+        df10=pd.DataFrame(t10,columns=["Video title","Channel name","Comments"])
+        st.write(df10)
