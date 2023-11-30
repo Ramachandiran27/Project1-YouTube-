@@ -1,6 +1,5 @@
 import pandas as pd
 from pymongo import MongoClient 
-import sqlite3 
 from datetime import datetime
 import streamlit as st
 from googleapiclient.discovery import build 
@@ -13,7 +12,6 @@ api_service_name = "youtube"
 api_version = "v3"
 youtube=build(api_service_name,api_version,developerKey=youtube_api_key)
 
-channel_id="UCJcCB-QYPIBcbKcBQOTwhiA"
 
 #getting channel details
 def youtubedata(channel_id):
@@ -63,12 +61,11 @@ def get_videoid(channel_id):
             break
     return video_ids
 
-Video_ID=get_videoid(channel_id)
 
 #getting video details
-def get_video_info(Video_ID):
+def get_video_info(video_ids):
     video_data=[]
-    for video_id in Video_ID:
+    for video_id in video_ids:
         request=youtube.videos().list(
             part='snippet,contentDetails,statistics',
             id=video_id)
@@ -92,13 +89,12 @@ def get_video_info(Video_ID):
             video_data.append(data)
     return video_data
 
-Video_info=get_video_info(Video_ID)
 
 #getting comment details
-def get_comment_info(Video_ID):
+def get_comment_info(video_ids):
     comment_list=[]
     try:
-        for videoid in Video_ID:
+        for videoid in video_ids:
             request=youtube.commentThreads().list(
                     part='snippet',
                     videoId=videoid,
@@ -118,7 +114,7 @@ def get_comment_info(Video_ID):
         pass
     return comment_list
 
-Comment_info=get_comment_info(Video_ID)
+
 
 #getting playlist details
 def get_playlist_info(channel_id):
@@ -146,7 +142,7 @@ def get_playlist_info(channel_id):
             break
     return playlist_list
 
-Playlist_info=get_playlist_info(channel_id)
+
 
 #MongoDB connection
 loc_client = MongoClient("mongodb://localhost:27017/")
@@ -155,19 +151,19 @@ coll = db['youtube_collection']
 
 def main(channelid):
     c=youtubedata(channel_id)
-    p=Playlist_info
-    v=Video_info
-    cm=Comment_info
+    p=get_playlist_info(channel_id)
+    video_Ids=get_videoid(channel_id)
+    v=get_video_info(video_Ids)
+    cm=get_comment_info(video_Ids)
     data={"Channel details":c,
          "Playlist details":p,
           "Video details":v,
           "Comment details":cm
          }
-    
-    return data
+    coll = db['youtube_collection']
+    coll.insert_one(data)
+    return "uploaded successfully" 
 
-
-insert=coll.insert_one(main(channel_id))
 
 #sql connections
 def channel_table():
@@ -463,6 +459,7 @@ channel_id=st.text_input("Enter the Channel ID")
 if st.button("Collect and store Data"):
     ch_ids=[]
     db = loc_client['youtube_data']
+
     for ch_data in coll.find({},{'_id':0,'Channel details':1}):
         ch_ids.append(ch_data["Channel details"]["Channel_id"])
 
@@ -470,7 +467,7 @@ if st.button("Collect and store Data"):
         st.success('Channel Id Already Exist')
 
     else:
-        insert=youtubedata(channel_id)
+        insert=main(channel_id)
         st.success(insert)
     
 if st.button("Migrate to Sql"):
@@ -498,7 +495,7 @@ con=pymysql.connect(
             )
 cursor=con.cursor()
 
-Questions=st.selectbox("Select the question",("1. All Videos and their Channel name"
+Questions=st.selectbox("Select the question",("1. All Videos and their Channel name",
                                               "2. Channel with most number of videos",
                                               "3. Top 10 most viewed Videos",
                                               "4. Comments in each Videos",
@@ -508,6 +505,7 @@ Questions=st.selectbox("Select the question",("1. All Videos and their Channel n
                                               "8. Videos published in the year of 2023",
                                               "9. Average Duration of all videos in each channels",
                                               "10. Videos with highest number of comments"))
+
 if Questions=="1. All Videos and their Channel name":
     query1="""select title as videos,Channel_name as channelname from videos"""
     cursor.execute(query1)
